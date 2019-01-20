@@ -1,9 +1,21 @@
 /*
-  SchmittTrigger.h v.01 - Library for 'duino / Wiring
-  https://github.com/JeromeDrouin/SchmittTrigger
+  File:         SchmittTrigger.cpp
+  Version:      0.0.1
+  Date:         05-Jan-2019
+  Revision:     20-Jan-2019
+  Author:       Jerome Drouin
+
+  Editions:	Please go to SchmittTrigger.h for Edition Notes.
+
+  SchmittTrigger.cpp - Library for 'duino / Wiring
+  https://github.com/newEndeavour/SchmittTrigger
   http://playground.arduino.cc/Main/SchmittTrigger
 
-  Copyright (c) 2018 Jerome Drouin  All rights reserved.
+  SchmittTrigger implements a Nysteresis dual threshold action. This
+  particular kind of trigger is useful for determining digital states in
+  noisy environments. 
+
+  Copyright (c) 2018-2019 Jerome Drouin  All rights reserved.
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -34,135 +46,244 @@
 // Constructor /////////////////////////////////////////////////////////////////
 // Function that handles the creation and setup of instances
 
-SchmittTrigger::SchmittTrigger(float _highThres, float _lowThres, uint8_t _high_crossreq, uint8_t _low_crossreq)
+SchmittTrigger::SchmittTrigger(float _Press_Thres, float _Release_Thres, uint8_t _Press_debounce, uint8_t _Release_debounce, int _operation)
 {
-	// initialize this instance's variables
+int op_fact = 0;
+
+	// Object parameter's error handling
 	error = 1;
-	if (_high_crossreq<=0) error =-1;		// incorrect High_Status_Thres variables
-	if (_low_crossreq<=0) error =-1;		// incorrect Low_Status_Thres variables
-	if (_highThres<_lowThres) error =-2;		// incorrect _highThres
-	if (_highThres<0) error =-3;			// incorrect _highThres
-	if (_lowThres<0) error =-3;			// incorrect _lowThres
+	if (_Press_debounce<=0) 		error =-1;	// incorrect _Press_debounce variables
+	if (_Press_debounce>MAX_DEBOUNCE) 	error =-1;	// incorrect _Release_debounce variables
+	if (_Release_debounce<=0) 		error =-1;	// incorrect _Release_debounce variables
+	if (_Release_debounce>MAX_DEBOUNCE) 	error =-1;	// incorrect _Release_debounce variables
+
+	if (_operation==0) op_fact = 1; 
+	if (_operation==1) op_fact = -1; 
+	if ((_Press_Thres*op_fact)<(_Release_Thres*op_fact)) 	error =-2;	// incorrect thres relative placements
+	if (_Press_Thres<0) 			error =-3;	// incorrect _Press_Thres
+	if (_Release_Thres<0) 			error =-3;	// incorrect _Release_Thres
+
+	if ((_operation!=0) 
+	 && (_operation!=1)
+	 && (_operation!=2)) 			error =-4;	// incorrect _operation mode
+
+
+	// Object data
+	Operation 		= _operation;		// =0: Rising only; =1: Falling only; =2: double (Rising & Falling)
 
 	//Set initial values	
-	CurrentStatus		= 0;			// Current Trigger value: either 0 or 1
-	High_Thres		= _highThres;		// Thresold Value to activate HIGH Counter
-	Low_Thres		= _lowThres;		// Thresold Value to activate LOW Counter
+	Press_Thres		= _Press_Thres;		// Thresold Value to activate Press Counter
+	Release_Thres		= _Release_Thres;		// Thresold Value to activate Release Counter
 
-	High_Cross_Req		= _high_crossreq;	// number of consecutive counts required to change CurrentStatus from 0 to 1
-	Low_Cross_Req		= _low_crossreq;	// number of consecutive counts required to change CurrentStatus from 1 to 0
+	Press_Debounce		= _Press_debounce;	// number of consecutive counts required to change Status from 0 to 1
+	Release_Debounce	= _Release_debounce;	// number of consecutive counts required to change Status from 1 to 0
 
-	High_CrossCount 	= 0;			// current number of times high_threshold is crossed
-	Low_CrossCount	 	= 0;			// current number of times low_threshold is crossed
+	resetTrigger();					// Reset Trigger data
 
 }
 
 
 // Public Methods //////////////////////////////////////////////////////////////
+//Resets current Trigger to false
+void SchmittTrigger::resetTrigger(void) 
+{
+
+	Status			= 0;			// Current Trigger value: reset to 0 (false)
+	Press_Count 		= 0;			// current number of times Press_threshold is crossed
+	Release_Count		= 0;			// current number of times Release_threshold is crossed
+
+}
+
+
+//Sets Operation mode
+void SchmittTrigger::SetOperation(int _operation)
+{
+	// Object parameter's error handling
+	if ((_operation!=0) 
+	 && (_operation!=1)
+	 && (_operation!=2)) 	error =-4;	// incorrect _operation mode
+
+	//Object data
+	Operation 		= _operation;		// =0: Rising only; =1: Falling only; =2: double (Rising & Falling)
+
+}
+
+
+//Get Operation mode
+int SchmittTrigger::GetOperation(void)
+{
+	return Operation;
+}
+
+
 // Update the Status of this Schmitt Trigger with the Last available Read and 
 // returns the current Status level
-int SchmittTrigger::updateTriggerStatus(float lastRead)
+int SchmittTrigger::updateStatus(float lastRead)
 {
 	if (error < 0) return error;            // bad constructor variables
 
-	//CurrentStatus==0
-	if (CurrentStatus==0) {
-    		if (lastRead>=High_Thres) {
-	    		High_CrossCount++;			
+	//0==Rising
+	if (Operation==0) {
+		//if Status==0
+		if (Status==0) {
+    			if (lastRead>=Press_Thres) {
+	    			Press_Count++;			
 
-      	    		if (High_CrossCount>=High_Cross_Req) {
-	      			CurrentStatus = 1;
+	      	    		if (Press_Count>=Press_Debounce) {
+		      			Status = 1;
+				}
+	
+		  	} else {
+				//Reset count
+				Press_Count = 0;
 			}
+		} else {
+			if (lastRead<Release_Thres) {
+				Release_Count++;				
 
-	  	} else {
-			//Reset count
-			High_CrossCount = 0;
-		}
-	} else {
-		if (lastRead<Low_Thres) {
-			Low_CrossCount++;				
-
-      	    		if (Low_CrossCount>=Low_Cross_Req) {
-	      			CurrentStatus = 0;
+	      	    		if (Release_Count>=Release_Debounce) {
+		      			Status = 0;
+				}
+		  	} else {
+				//Reset count
+				Release_Count = 0;
 			}
-	  	} else {
-			//Reset count
-			Low_CrossCount = 0;
 		}
 	}
+
+	//1==Falling
+	if (Operation==1) {
+		//if Status==0
+		if (Status==0) {
+    			if (lastRead<=Press_Thres) {
+	    			Press_Count++;			
+
+	      	    		if (Press_Count>=Press_Debounce) {
+		      			Status = 1;
+				}
+	
+		  	} else {
+				//Reset count
+				Press_Count = 0;
+			}
+		} else {
+			if (lastRead>Release_Thres) {
+				Release_Count++;				
+
+	      	    		if (Release_Count>=Release_Debounce) {
+		      			Status = 0;
+				}
+		  	} else {
+				//Reset count
+				Release_Count = 0;
+			}
+		}
+	}
+
+	//2==Double
+	if (Operation==2) {
+		
+
+		//NOT IMPLEMENTED JUST YET
+
+	}
+
 	// Return   
-	return CurrentStatus;	
+	return Status;	
 }
 
 
-int SchmittTrigger::GetCurrentStatus(void)
+int SchmittTrigger::GetStatus(void)
 {
-	return CurrentStatus;
+	return Status;
 }
 
 
-void SchmittTrigger::SetHighThreshold(float _highThres)
+void SchmittTrigger::SetPressThreshold(float _Press_Thres)
 {
-	if (_highThres<Low_Thres) error =-2;	// incorrect _highThres
-	if (_highThres<0) error =-3;		// incorrect _highThres
-	High_Thres	= _highThres;
+int op_fact = 0;
+
+	// Object parameter's error handling
+	if (Operation==0) op_fact = 1; 
+	if (Operation==1) op_fact = -1; 
+	if ((_Press_Thres*op_fact)<(Release_Thres*op_fact)) 	error =-2;	// incorrect thres relative placements
+	if (_Press_Thres<0) 	error =-3;	// incorrect _Press_Thres
+
+	// Object data
+	Press_Thres		= _Press_Thres;
 }
 
 
-void SchmittTrigger::SetLowThreshold(float _lowThres)
+void SchmittTrigger::SetReleaseThreshold(float _Release_Thres)
 {
-	error = 1;
-	if (_lowThres<0) error =-3;		// incorrect _lowThres
-	Low_Thres	= _lowThres;
+int op_fact = 0;
+
+	// Object parameter's error handling
+	if (Operation==0) op_fact = 1; 
+	if (Operation==1) op_fact = -1; 
+	if ((Press_Thres*op_fact)<(_Release_Thres*op_fact)) 	error =-2;	// incorrect thres relative placements
+	if (_Release_Thres<0) 	error =-3;	// incorrect _Release_Thres
+
+	// Object data
+	Release_Thres		= _Release_Thres;
 }
 
 
-void SchmittTrigger::SetHighCrossReq(uint8_t _high_crossReq)
+void SchmittTrigger::SetPressDebounce(uint8_t _Press_debounce)
 {
-	if (_high_crossReq<=0) error =-1;		// incorrect _high_crossReq variables
-	High_Cross_Req	= _high_crossReq;
+	// Object parameter's error handling
+	if (_Press_debounce<=0) 		error =-1;		// incorrect _Press_debounce variables
+	if (_Press_debounce>MAX_DEBOUNCE) 	error =-1;		// incorrect _Release_debounce variables
+
+	// Object data
+	Press_Debounce		= _Press_debounce;
 }
 
 
-void SchmittTrigger::SetLowCrossReq(uint8_t _low_crossReq)
+void SchmittTrigger::SetReleaseDebounce(uint8_t _Release_debounce)
 {
-	if (_low_crossReq<=0) error =-1;		// incorrect _low_crossReq variables
-	Low_Cross_Req	= _low_crossReq;
+	// Object parameter's error handling
+	if (_Release_debounce<=0) 		error =-1;		// incorrect _Release_debounce variables
+	if (_Release_debounce>MAX_DEBOUNCE) 	error =-1;		// incorrect _Release_debounce variables
+
+	// Object data
+	Release_Debounce	= _Release_debounce;
 }
 
 
-float SchmittTrigger::GetHighThreshold(void)
+float SchmittTrigger::GetPressThreshold(void)
 {
-	return High_Thres;
+	return Press_Thres;
 }
 
 
-float SchmittTrigger::GetLowThreshold(void)
+float SchmittTrigger::GetReleaseThreshold(void)
 {
-	return Low_Thres;
+	return Release_Thres;
 }
 
 
-uint8_t SchmittTrigger::GetHighCrossCount(void) 
+uint8_t SchmittTrigger::GetPressCount(void) 
 {
-	return High_CrossCount;
-}
-
-uint8_t SchmittTrigger::GetLowCrossCount(void) 
-{
-	return Low_CrossCount;
+	return Press_Count;
 }
 
 
-uint8_t SchmittTrigger::GetHighCrossReq(void)
+uint8_t SchmittTrigger::GetReleaseCount(void) 
 {
-	return High_Cross_Req;
+	return Release_Count;
 }
 
 
-uint8_t SchmittTrigger::GetLowCrossReq(void)
+uint8_t SchmittTrigger::GetPressDebounce(void)
 {
-	return Low_Cross_Req;
+	return Press_Debounce;
+}
+
+
+uint8_t SchmittTrigger::GetReleaseDebounce(void)
+{
+	return Release_Debounce;
 }
 
 
