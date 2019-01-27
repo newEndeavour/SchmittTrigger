@@ -3,7 +3,7 @@
   Version:      0.0.1
   Date:         05-Jan-2019
   Revision:     20-Jan-2019
-  Author:       Jerome Drouin
+  Author:       Jerome Drouin (jerome.p.drouin@gmail.com)
 
   Editions:	Please go to SchmittTrigger.h for Edition Notes.
 
@@ -185,6 +185,7 @@ int SchmittTrigger::updateStatus(float lastRead)
 		
 
 		//NOT IMPLEMENTED JUST YET
+		//(this requires the doubling or Press/Release Thres parameters or a mirroring methodology
 
 	}
 

@@ -1,2 +1,8 @@
 SchmittTrigger		KEYWORD1
-TriggerStatus		KEYWORD2
+Status			KEYWORD2
+Rising			KEYWORD3
+Falling			KEYWORD4
+Threshold		KEYWORD5
+Press			KEYWORD6
+Release			KEYWORD7
+Debouncing		KEYWORD8

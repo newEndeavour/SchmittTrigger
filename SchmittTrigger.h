@@ -3,7 +3,7 @@
   Version:      0.0.1
   Date:         05-Jan-2019
   Revision:     20-Jan-2019
-  Author:       Jerome Drouin
+  Author:       Jerome Drouin (jerome.p.drouin@gmail.com)
 
   Editions:
   - 0.0.1	: First version
@@ -85,7 +85,7 @@ class SchmittTrigger
   private:
   // variables
 	int 	error;
-	int 	Operation;		// =0: Rising only; =1: Falling only; =2: double (Rising & Falling)
+	int 	Operation;		// =0: Rising only; =1: Falling only.
 
 	uint8_t	Status;			// Current Trigger value: either 0 or 1
 
