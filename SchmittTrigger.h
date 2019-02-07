@@ -57,7 +57,8 @@ class SchmittTrigger
   public:
   // methods
 	SchmittTrigger(float _Press_Thres, float _Release_Thres, uint8_t _Press_Debounce, uint8_t _Release_Debounce, int _Operation);
-	void 	resetTrigger(void);
+	void 	resetTriggerStatus(void);
+	void 	resetTriggerParameters(void);
 
 	int 	updateStatus(float lastObs);
 	int 	GetStatus(void);
@@ -102,6 +103,8 @@ class SchmittTrigger
 	uint8_t	Release_Count;		// current number of times Release threshold is crossed (lastObs<Release_Count) consecutively
 	
   // methods
+	void 	ResetErrors(void);	// Error flag handling
+
 };
 
 #endif

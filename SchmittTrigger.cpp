@@ -50,23 +50,6 @@ SchmittTrigger::SchmittTrigger(float _Press_Thres, float _Release_Thres, uint8_t
 {
 int op_fact = 0;
 
-	// Object parameter's error handling
-	error = 1;
-	if (_Press_debounce<=0) 		error =-1;	// incorrect _Press_debounce variables
-	if (_Press_debounce>MAX_DEBOUNCE) 	error =-1;	// incorrect _Release_debounce variables
-	if (_Release_debounce<=0) 		error =-1;	// incorrect _Release_debounce variables
-	if (_Release_debounce>MAX_DEBOUNCE) 	error =-1;	// incorrect _Release_debounce variables
-
-	if (_operation==0) op_fact = 1; 
-	if (_operation==1) op_fact = -1; 
-	if ((_Press_Thres*op_fact)<(_Release_Thres*op_fact)) 	error =-2;	// incorrect thres relative placements
-	if (_Press_Thres<0) 			error =-3;	// incorrect _Press_Thres
-	if (_Release_Thres<0) 			error =-3;	// incorrect _Release_Thres
-
-	if ((_operation!=0) 
-	 && (_operation!=1)
-	 && (_operation!=2)) 			error =-4;	// incorrect _operation mode
-
 
 	// Object data
 	Operation 		= _operation;		// =0: Rising only; =1: Falling only; =2: double (Rising & Falling)
@@ -78,19 +61,35 @@ int op_fact = 0;
 	Press_Debounce		= _Press_debounce;	// number of consecutive counts required to change Status from 0 to 1
 	Release_Debounce	= _Release_debounce;	// number of consecutive counts required to change Status from 1 to 0
 
-	resetTrigger();					// Reset Trigger data
+	resetTriggerStatus();				// Reset Trigger data
+
+	// Object parameter's error handling
+	ResetErrors();
 
 }
 
 
 // Public Methods //////////////////////////////////////////////////////////////
 //Resets current Trigger to false
-void SchmittTrigger::resetTrigger(void) 
+void SchmittTrigger::resetTriggerStatus(void) 
 {
 
 	Status			= 0;			// Current Trigger value: reset to 0 (false)
 	Press_Count 		= 0;			// current number of times Press_threshold is crossed
 	Release_Count		= 0;			// current number of times Release_threshold is crossed
+
+	ResetErrors();					// Object parameter's error handling
+}
+
+
+//Resets current Trigger parameters
+void SchmittTrigger::resetTriggerParameters(void) 
+{
+
+	Press_Thres		= -1;
+	Release_Thres		= -1;
+
+	resetTriggerStatus();				// Reset Trigger data
 
 }
 
@@ -98,14 +97,11 @@ void SchmittTrigger::resetTrigger(void)
 //Sets Operation mode
 void SchmittTrigger::SetOperation(int _operation)
 {
-	// Object parameter's error handling
-	if ((_operation!=0) 
-	 && (_operation!=1)
-	 && (_operation!=2)) 	error =-4;	// incorrect _operation mode
 
 	//Object data
 	Operation 		= _operation;		// =0: Rising only; =1: Falling only; =2: double (Rising & Falling)
 
+	ResetErrors();					// Object parameter's error handling
 }
 
 
@@ -202,53 +198,42 @@ int SchmittTrigger::GetStatus(void)
 
 void SchmittTrigger::SetPressThreshold(float _Press_Thres)
 {
-int op_fact = 0;
-
-	// Object parameter's error handling
-	if (Operation==0) op_fact = 1; 
-	if (Operation==1) op_fact = -1; 
-	if ((_Press_Thres*op_fact)<(Release_Thres*op_fact)) 	error =-2;	// incorrect thres relative placements
-	if (_Press_Thres<0) 	error =-3;	// incorrect _Press_Thres
-
 	// Object data
 	Press_Thres		= _Press_Thres;
+
+	// Object parameter's error handling
+	ResetErrors();
 }
 
 
 void SchmittTrigger::SetReleaseThreshold(float _Release_Thres)
 {
-int op_fact = 0;
-
-	// Object parameter's error handling
-	if (Operation==0) op_fact = 1; 
-	if (Operation==1) op_fact = -1; 
-	if ((Press_Thres*op_fact)<(_Release_Thres*op_fact)) 	error =-2;	// incorrect thres relative placements
-	if (_Release_Thres<0) 	error =-3;	// incorrect _Release_Thres
-
 	// Object data
 	Release_Thres		= _Release_Thres;
+
+	// Object parameter's error handling
+	ResetErrors();
 }
 
 
 void SchmittTrigger::SetPressDebounce(uint8_t _Press_debounce)
 {
-	// Object parameter's error handling
-	if (_Press_debounce<=0) 		error =-1;		// incorrect _Press_debounce variables
-	if (_Press_debounce>MAX_DEBOUNCE) 	error =-1;		// incorrect _Release_debounce variables
-
 	// Object data
 	Press_Debounce		= _Press_debounce;
+
+	// Object parameter's error handling
+	ResetErrors();
 }
 
 
 void SchmittTrigger::SetReleaseDebounce(uint8_t _Release_debounce)
 {
-	// Object parameter's error handling
-	if (_Release_debounce<=0) 		error =-1;		// incorrect _Release_debounce variables
-	if (_Release_debounce>MAX_DEBOUNCE) 	error =-1;		// incorrect _Release_debounce variables
 
 	// Object data
 	Release_Debounce	= _Release_debounce;
+
+	// Object parameter's error handling
+	ResetErrors();
 }
 
 
@@ -290,6 +275,36 @@ uint8_t SchmittTrigger::GetReleaseDebounce(void)
 
 // Private Methods /////////////////////////////////////////////////////////////
 // Functions only available to other functions in this library
+
+//Reset error flag
+void SchmittTrigger::ResetErrors(void)
+{
+int op_fact = 0;
+
+	// Object parameter's error handling
+	error = 1;
+
+	if (Press_Debounce<=0)	 		error =-1;	// incorrect _Press_debounce variables
+	if (Press_Debounce>MAX_DEBOUNCE) 	error =-1;	// incorrect _Release_debounce variables
+
+	if (Release_Debounce<=0) 		error =-1;	// incorrect _Release_debounce variables
+	if (Release_Debounce>MAX_DEBOUNCE) 	error =-1;	// incorrect _Release_debounce variables
+
+	if (Operation==0) op_fact = 1; 
+	if (Operation==1) op_fact = -1; 
+	if ((Press_Thres*op_fact)	
+		<(Release_Thres*op_fact)) 	error =-2;	// incorrect thres relative placements
+
+	if (Press_Thres<0) 			error =-3;	// incorrect Press_Thres
+	if (Release_Thres<0) 			error =-3;	// incorrect Release_Thres
+
+	if ((Operation!=0) 
+	 && (Operation!=1)
+	 && (Operation!=2)) 			error =-4;	// incorrect _operation mode
+
+}
+
+
 
 
 // /////////////////////////////////////////////////////////////////////////////
