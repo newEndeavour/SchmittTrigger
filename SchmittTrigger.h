@@ -1,13 +1,9 @@
 /*
   File:         SchmittTrigger.h
-  Version:      0.0.1
+  Version:      0.0.2
   Date:         05-Jan-2019
-  Revision:     20-Jan-2019
+  Revision:     13-Feb-2019
   Author:       Jerome Drouin (jerome.p.drouin@gmail.com)
-
-  Editions:
-  - 0.0.1	: First version
-  - 0.0.2	: -
 
   SchmittTrigger.h - Library for 'duino / Wiring
   https://github.com/newEndeavour/SchmittTrigger
@@ -31,6 +27,11 @@
  
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+  Editions:
+  - 0.0.1	: First version
+  - 0.0.2	: Introducing hierarchy in error coding returns
+		  
 
 */
 

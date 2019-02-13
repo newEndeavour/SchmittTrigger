@@ -1,8 +1,8 @@
 /*
   File:         SchmittTrigger.cpp
-  Version:      0.0.1
+  Version:      0.0.2
   Date:         05-Jan-2019
-  Revision:     20-Jan-2019
+  Revision:     13-Feb-2019
   Author:       Jerome Drouin (jerome.p.drouin@gmail.com)
 
   Editions:	Please go to SchmittTrigger.h for Edition Notes.
@@ -276,7 +276,15 @@ uint8_t SchmittTrigger::GetReleaseDebounce(void)
 // Private Methods /////////////////////////////////////////////////////////////
 // Functions only available to other functions in this library
 
-//Reset error flag
+//Reset error flag following importance hierarchy
+//by increasing error importance:
+//	- Operation	: -4
+//	- Debounce	: -3
+//	- Thres position: -2
+//	- Thres values	: -1	(most important)
+//	Note: Object instanciated with incorrect Operation mode and incorrect threshold values
+//	will return -1 (first), and then -4 only after theshold conflicts have been resolved.
+//	
 void SchmittTrigger::ResetErrors(void)
 {
 int op_fact = 0;
@@ -284,26 +292,25 @@ int op_fact = 0;
 	// Object parameter's error handling
 	error = 1;
 
-	if (Press_Debounce<=0)	 		error =-1;	// incorrect _Press_debounce variables
-	if (Press_Debounce>MAX_DEBOUNCE) 	error =-1;	// incorrect _Release_debounce variables
+	if ((Operation!=0) 
+	 && (Operation!=1)
+	 && (Operation!=2)) 			error =-4;	// incorrect _operation mode
 
-	if (Release_Debounce<=0) 		error =-1;	// incorrect _Release_debounce variables
-	if (Release_Debounce>MAX_DEBOUNCE) 	error =-1;	// incorrect _Release_debounce variables
+	if (Press_Debounce<=0)	 		error =-3;	// incorrect _Press_debounce variables
+	if (Press_Debounce>MAX_DEBOUNCE) 	error =-3;	// incorrect _Release_debounce variables
+
+	if (Release_Debounce<=0) 		error =-3;	// incorrect _Release_debounce variables
+	if (Release_Debounce>MAX_DEBOUNCE) 	error =-3;	// incorrect _Release_debounce variables
 
 	if (Operation==0) op_fact = 1; 
 	if (Operation==1) op_fact = -1; 
 	if ((Press_Thres*op_fact)	
 		<(Release_Thres*op_fact)) 	error =-2;	// incorrect thres relative placements
 
-	if (Press_Thres<0) 			error =-3;	// incorrect Press_Thres
-	if (Release_Thres<0) 			error =-3;	// incorrect Release_Thres
-
-	if ((Operation!=0) 
-	 && (Operation!=1)
-	 && (Operation!=2)) 			error =-4;	// incorrect _operation mode
+	if (Press_Thres<0) 			error =-1;	// incorrect Press_Thres
+	if (Release_Thres<0) 			error =-1;	// incorrect Release_Thres
 
 }
-
 
 
 
