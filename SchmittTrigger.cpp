@@ -1,8 +1,8 @@
 /*
   File:         SchmittTrigger.cpp
-  Version:      0.0.2
+  Version:      0.0.3
   Date:         05-Jan-2019
-  Revision:     13-Feb-2019
+  Revision:     20-Feb-2019
   Author:       Jerome Drouin (jerome.p.drouin@gmail.com)
 
   Editions:	Please go to SchmittTrigger.h for Edition Notes.
@@ -46,7 +46,7 @@
 // Constructor /////////////////////////////////////////////////////////////////
 // Function that handles the creation and setup of instances
 
-SchmittTrigger::SchmittTrigger(float _Press_Thres, float _Release_Thres, uint8_t _Press_debounce, uint8_t _Release_debounce, int _operation)
+SchmittTrigger::SchmittTrigger(float _Ref_Level, float _Press_Thres, float _Release_Thres, uint8_t _Press_debounce, uint8_t _Release_debounce, int _operation)
 {
 int op_fact = 0;
 
@@ -55,8 +55,10 @@ int op_fact = 0;
 	Operation 		= _operation;		// =0: Rising only; =1: Falling only; =2: double (Rising & Falling)
 
 	//Set initial values	
+	Ref_Level		= _Ref_Level;		// Reference Level for Thresholds
 	Press_Thres		= _Press_Thres;		// Thresold Value to activate Press Counter
-	Release_Thres		= _Release_Thres;		// Thresold Value to activate Release Counter
+	Release_Thres		= _Release_Thres;	// Thresold Value to activate Release Counter
+	Update_Threshold_Factors();
 
 	Press_Debounce		= _Press_debounce;	// number of consecutive counts required to change Status from 0 to 1
 	Release_Debounce	= _Release_debounce;	// number of consecutive counts required to change Status from 1 to 0
@@ -86,11 +88,13 @@ void SchmittTrigger::resetTriggerStatus(void)
 void SchmittTrigger::resetTriggerParameters(void) 
 {
 
+	Ref_Level		= -1;
 	Press_Thres		= -1;
 	Release_Thres		= -1;
 
 	resetTriggerStatus();				// Reset Trigger data
 
+	ResetErrors();					// Object parameter's error handling
 }
 
 
@@ -196,10 +200,26 @@ int SchmittTrigger::GetStatus(void)
 }
 
 
+void SchmittTrigger::SetReferenceLevel(float _Ref_Level, int recalc_factors)
+{
+	// Object data
+	Ref_Level		= _Ref_Level;
+	
+	if (recalc_factors) 
+		Update_Threshold_Factors();
+	else
+		Update_Threshold_Levels();
+
+	// Object parameter's error handling
+	ResetErrors();
+}
+
 void SchmittTrigger::SetPressThreshold(float _Press_Thres)
 {
 	// Object data
 	Press_Thres		= _Press_Thres;
+
+	Update_Threshold_Factors();
 
 	// Object parameter's error handling
 	ResetErrors();
@@ -210,6 +230,32 @@ void SchmittTrigger::SetReleaseThreshold(float _Release_Thres)
 {
 	// Object data
 	Release_Thres		= _Release_Thres;
+
+	Update_Threshold_Factors();
+
+	// Object parameter's error handling
+	ResetErrors();
+}
+
+
+void SchmittTrigger::SetPressThresholdFactor(float _Press_Thres_Factor)
+{
+	// Object data
+	Press_Thres_Factor	= _Press_Thres_Factor;
+
+	Update_Threshold_Levels();
+
+	// Object parameter's error handling
+	ResetErrors();
+}
+
+
+void SchmittTrigger::SetReleaseThresholdFactor(float _Release_Thres_Factor)
+{
+	// Object data
+	Release_Thres_Factor	= _Release_Thres_Factor;
+
+	Update_Threshold_Levels();
 
 	// Object parameter's error handling
 	ResetErrors();
@@ -237,6 +283,12 @@ void SchmittTrigger::SetReleaseDebounce(uint8_t _Release_debounce)
 }
 
 
+float SchmittTrigger::GetReferenceLevel(void)
+{
+	return Ref_Level;
+}
+
+
 float SchmittTrigger::GetPressThreshold(void)
 {
 	return Press_Thres;
@@ -246,6 +298,18 @@ float SchmittTrigger::GetPressThreshold(void)
 float SchmittTrigger::GetReleaseThreshold(void)
 {
 	return Release_Thres;
+}
+
+
+float SchmittTrigger::GetPressThresholdFactor(void)
+{
+	return Press_Thres_Factor;
+}
+
+
+float SchmittTrigger::GetReleaseThresholdFactor(void)
+{
+	return Release_Thres_Factor;
 }
 
 
@@ -278,8 +342,9 @@ uint8_t SchmittTrigger::GetReleaseDebounce(void)
 
 //Reset error flag following importance hierarchy
 //by increasing error importance:
-//	- Operation	: -4
-//	- Debounce	: -3
+//	- Operation	: -5
+//	- Debounce	: -4
+//	- Ref Level	: -3
 //	- Thres position: -2
 //	- Thres values	: -1	(most important)
 //	Note: Object instanciated with incorrect Operation mode and incorrect threshold values
@@ -294,13 +359,15 @@ int op_fact = 0;
 
 	if ((Operation!=0) 
 	 && (Operation!=1)
-	 && (Operation!=2)) 			error =-4;	// incorrect _operation mode
+	 && (Operation!=2)) 			error =-5;	// incorrect Operation mode
 
-	if (Press_Debounce<=0)	 		error =-3;	// incorrect _Press_debounce variables
-	if (Press_Debounce>MAX_DEBOUNCE) 	error =-3;	// incorrect _Release_debounce variables
+	if (Press_Debounce<=0)	 		error =-4;	// incorrect Press_debounce variables
+	if (Press_Debounce>MAX_DEBOUNCE) 	error =-4;	// incorrect Release_debounce variables
 
-	if (Release_Debounce<=0) 		error =-3;	// incorrect _Release_debounce variables
-	if (Release_Debounce>MAX_DEBOUNCE) 	error =-3;	// incorrect _Release_debounce variables
+	if (Release_Debounce<=0) 		error =-4;	// incorrect Release_debounce variables
+	if (Release_Debounce>MAX_DEBOUNCE) 	error =-4;	// incorrect Release_debounce variables
+
+	if (Ref_Level<0) 			error =-3;	// incorrect Ref_Level
 
 	if (Operation==0) op_fact = 1; 
 	if (Operation==1) op_fact = -1; 
@@ -312,6 +379,34 @@ int op_fact = 0;
 
 }
 
+
+void SchmittTrigger::Update_Threshold_Factors(void)
+{
+	//Update Factors
+	if (Ref_Level>0) {
+		if (Press_Thres>0)
+			Press_Thres_Factor = Press_Thres/Ref_Level;	
+		if (Release_Thres>0)
+			Release_Thres_Factor = Release_Thres/Ref_Level;	
+	} else {
+		Press_Thres_Factor = 0;
+		Release_Thres_Factor = 0;
+	}
+
+}
+
+
+void SchmittTrigger::Update_Threshold_Levels(void)
+{
+	//Update Thresholds Levels
+	if (Ref_Level>0) {
+		if (Press_Thres_Factor>0)
+			Press_Thres = Press_Thres_Factor  * Ref_Level;	
+		if (Release_Thres>0)
+			Release_Thres = Release_Thres_Factor * Ref_Level;	
+	}
+
+}
 
 
 // /////////////////////////////////////////////////////////////////////////////

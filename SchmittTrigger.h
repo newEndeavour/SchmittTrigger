@@ -1,8 +1,8 @@
 /*
   File:         SchmittTrigger.h
-  Version:      0.0.2
+  Version:      0.0.3
   Date:         05-Jan-2019
-  Revision:     13-Feb-2019
+  Revision:     20-Feb-2019
   Author:       Jerome Drouin (jerome.p.drouin@gmail.com)
 
   SchmittTrigger.h - Library for 'duino / Wiring
@@ -31,6 +31,10 @@
   Editions:
   - 0.0.1	: First version
   - 0.0.2	: Introducing hierarchy in error coding returns
+  - 0.0.3	: Introducing Ref_Level & Threshold Factors so we can update 
+		  Thresholds from initially set Factors
+		  Call SetReferenceLevel(Reflevel,0) to keep Factors constant
+		  call SetReferenceLevel(Reflevel,1) to recalculate Factors
 		  
 
 */
@@ -57,7 +61,7 @@ class SchmittTrigger
   // user-accessible "public" interface
   public:
   // methods
-	SchmittTrigger(float _Press_Thres, float _Release_Thres, uint8_t _Press_Debounce, uint8_t _Release_Debounce, int _Operation);
+	SchmittTrigger(float _Ref_Level, float _Press_Thres, float _Release_Thres, uint8_t _Press_Debounce, uint8_t _Release_Debounce, int _Operation);
 	void 	resetTriggerStatus(void);
 	void 	resetTriggerParameters(void);
 
@@ -67,14 +71,21 @@ class SchmittTrigger
 	void 	SetOperation(int _Operation);
 	int 	GetOperation();
 
+	void 	SetReferenceLevel(float _Ref_Level, int recalc_factors);
+	float 	GetReferenceLevel(void);
+
 	void 	SetPressThreshold(float _Press_Thres);
 	void 	SetReleaseThreshold(float _Release_Thres);	
+	float 	GetPressThreshold(void);
+	float 	GetReleaseThreshold(void);
+
+	float 	GetPressThresholdFactor(void);
+	float 	GetReleaseThresholdFactor(void);
+	void 	SetPressThresholdFactor(float _Press_Thres_Factor);
+	void 	SetReleaseThresholdFactor(float _Release_Thres_Factor);	
 
 	void 	SetPressDebounce(uint8_t _Press_Debounce);
 	void 	SetReleaseDebounce(uint8_t _Release_Debounce);
-
-	float 	GetPressThreshold(void);
-	float 	GetReleaseThreshold(void);
 
 	uint8_t GetPressCount(void);
 	uint8_t GetReleaseCount(void);
@@ -91,8 +102,12 @@ class SchmittTrigger
 
 	uint8_t	Status;			// Current Trigger value: either 0 or 1
 
+	float	Ref_Level;		// Reference Level
 	float	Press_Thres;		// Thresold Value to activate Press Counter
 	float	Release_Thres;		// Thresold Value to activate Release Counter
+
+	float	Press_Thres_Factor;	// Thresold Factor (vs Ref_Level) to activate Press Counter
+	float	Release_Thres_Factor;	// Thresold Factor (vs Ref_Level) to activate Release Counter
 
 	uint8_t Press_Debounce;		// number of consecutive counts to change CurrentStatus from 0 to 1
 					// if this parameter is too large, the trigger might never be = 1
@@ -105,6 +120,8 @@ class SchmittTrigger
 	
   // methods
 	void 	ResetErrors(void);	// Error flag handling
+	void 	Update_Threshold_Factors(void);		// Called when setting Levels
+	void 	Update_Threshold_Levels(void);		// Called when setting Factors directly
 
 };
 
