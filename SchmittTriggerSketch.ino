@@ -26,12 +26,15 @@
 #include <SchmittTrigger.h>
 
 //---- SchmittTrigger Object parameters ----------------------------------------------------
+#define ST_RECALC_FACTORS               0     // Factors are not recalculated when Ref_Level is Updated (but Threshold Levels are)
+
 #define ST1_PRESS_DEBOUNCE              1     // Debouncing Press Parameter
 #define ST1_RELEASE_DEBOUNCE            3     // Debouncing Release Parameter
 #define ST1_OPERATION                   0     // 0=Rising / 1=Falling / 2=Double  
+float   ST1_INIT_REF_LEVEL       = 0.5;  
 float   ST1_PRESS_THRES          = 0.6;       // Press Level
 float   ST1_RELEA_THRES          = 0.4;       // Release Level
-SchmittTrigger ST1(ST1_PRESS_THRES, ST1_RELEA_THRES, ST1_PRESS_DEBOUNCE, ST1_RELEASE_DEBOUNCE, ST1_OPERATION);
+SchmittTrigger ST1(ST1_INIT_REF_LEVEL, ST1_PRESS_THRES, ST1_RELEA_THRES, ST1_PRESS_DEBOUNCE, ST1_RELEASE_DEBOUNCE, ST1_OPERATION);
 int ST1_Status;
 
 //---- General Variables ----------------------------------------------------
@@ -46,8 +49,9 @@ void setup() {
 
   //For info
   //Unnecessary as this is already supported in Constructor
+  ST1.SetReferenceLevel(ST1_INIT_REF_LEVEL,ST_RECALC_FACTORS);
   ST1.SetPressThreshold(ST1_PRESS_THRES);
-  ST1.SetReleaseThreshold(ST1_RELEA_THRES);
+  ST1.SetReleaThreshold(ST1_RELEA_THRES);
   ST1.resetTriggerStatus();
   ST1_Status = ST1.GetStatus();
 
@@ -78,7 +82,7 @@ void loop() {
   Serial.print(")");      
   
   Serial.print("\tdeBouncing{");
-  Serial.print(ST1.GetReleaseCount());
+  Serial.print(ST1.GetReleaCount());
   Serial.print("|");
   Serial.print(ST1.GetPressCount());
   Serial.print("}");

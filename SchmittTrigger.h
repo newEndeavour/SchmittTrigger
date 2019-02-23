@@ -61,7 +61,7 @@ class SchmittTrigger
   // user-accessible "public" interface
   public:
   // methods
-	SchmittTrigger(float _Ref_Level, float _Press_Thres, float _Release_Thres, uint8_t _Press_Debounce, uint8_t _Release_Debounce, int _Operation);
+	SchmittTrigger(float _Ref_Level, float _Press_Thres, float _Relea_Thres, uint8_t _Press_Debounce, uint8_t _Relea_Debounce, int _Operation);
 	void 	resetTriggerStatus(void);
 	void 	resetTriggerParameters(void);
 
@@ -75,23 +75,23 @@ class SchmittTrigger
 	float 	GetReferenceLevel(void);
 
 	void 	SetPressThreshold(float _Press_Thres);
-	void 	SetReleaseThreshold(float _Release_Thres);	
+	void 	SetReleaThreshold(float _Relea_Thres);	
 	float 	GetPressThreshold(void);
-	float 	GetReleaseThreshold(void);
+	float 	GetReleaThreshold(void);
 
 	float 	GetPressThresholdFactor(void);
-	float 	GetReleaseThresholdFactor(void);
+	float 	GetReleaThresholdFactor(void);
 	void 	SetPressThresholdFactor(float _Press_Thres_Factor);
-	void 	SetReleaseThresholdFactor(float _Release_Thres_Factor);	
+	void 	SetReleaThresholdFactor(float _Relea_Thres_Factor);	
 
 	void 	SetPressDebounce(uint8_t _Press_Debounce);
-	void 	SetReleaseDebounce(uint8_t _Release_Debounce);
+	void 	SetReleaDebounce(uint8_t _Release_Debounce);
 
 	uint8_t GetPressCount(void);
-	uint8_t GetReleaseCount(void);
+	uint8_t GetReleaCount(void);
 
 	uint8_t GetPressDebounce(void);
-	uint8_t GetReleaseDebounce(void);
+	uint8_t GetReleaDebounce(void);
 
 
   // library-accessible "private" interface
@@ -104,19 +104,19 @@ class SchmittTrigger
 
 	float	Ref_Level;		// Reference Level
 	float	Press_Thres;		// Thresold Value to activate Press Counter
-	float	Release_Thres;		// Thresold Value to activate Release Counter
+	float	Relea_Thres;		// Thresold Value to activate Release Counter
 
 	float	Press_Thres_Factor;	// Thresold Factor (vs Ref_Level) to activate Press Counter
-	float	Release_Thres_Factor;	// Thresold Factor (vs Ref_Level) to activate Release Counter
+	float	Relea_Thres_Factor;	// Thresold Factor (vs Ref_Level) to activate Release Counter
 
 	uint8_t Press_Debounce;		// number of consecutive counts to change CurrentStatus from 0 to 1
 					// if this parameter is too large, the trigger might never be = 1
 					// if too small (=1), the Schmitt Trigger might be very noisy 
-	uint8_t Release_Debounce;	// number of consecutive counts to change CurrentStatus from 1 to 0
+	uint8_t Relea_Debounce;		// number of consecutive counts to change CurrentStatus from 1 to 0
 
 	uint8_t	Press_Count;		// current number of times Press threshold is crossed (lastObs>=Press_Count) consecutively
 					// "une hirondelle ne fait pas le primtemps..."
-	uint8_t	Release_Count;		// current number of times Release threshold is crossed (lastObs<Release_Count) consecutively
+	uint8_t	Relea_Count;		// current number of times Release threshold is crossed (lastObs<Release_Count) consecutively
 	
   // methods
 	void 	ResetErrors(void);	// Error flag handling
