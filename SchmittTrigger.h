@@ -52,7 +52,12 @@
 #endif
 
 
-#define MAX_DEBOUNCE	20	// MAX DEBOUNCE PARAM. 
+// DEFINES /////////////////////////////////////////////////////////////
+#define VER_SchmittTrigger	"0.0.3"		//
+#define REL_SchmittTrigger	"20Feb2019"	//
+
+
+#define MAX_DEBOUNCE		20	// MAX DEBOUNCE PARAM. 
 
 
 // library interface description
@@ -84,14 +89,17 @@ class SchmittTrigger
 	void 	SetPressThresholdFactor(float _Press_Thres_Factor);
 	void 	SetReleaThresholdFactor(float _Relea_Thres_Factor);	
 
+	uint8_t GetPressDebounce(void);
+	uint8_t GetReleaDebounce(void);
 	void 	SetPressDebounce(uint8_t _Press_Debounce);
 	void 	SetReleaDebounce(uint8_t _Release_Debounce);
 
 	uint8_t GetPressCount(void);
 	uint8_t GetReleaCount(void);
 
-	uint8_t GetPressDebounce(void);
-	uint8_t GetReleaDebounce(void);
+
+	String 	GetVersion();
+	String 	GetReleaseDate();
 
 
   // library-accessible "private" interface

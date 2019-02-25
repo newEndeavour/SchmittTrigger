@@ -72,6 +72,20 @@ int op_fact = 0;
 
 
 // Public Methods //////////////////////////////////////////////////////////////
+// Returns the Version
+String SchmittTrigger::GetVersion()
+{
+	return VER_SchmittTrigger;
+}
+
+
+// Returns the Release Data
+String SchmittTrigger::GetReleaseDate()
+{
+	return REL_SchmittTrigger;
+}
+
+
 //Resets current Trigger to false
 void SchmittTrigger::resetTriggerStatus(void) 
 {
